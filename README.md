@@ -1,4 +1,6 @@
-# Aevun - Эвум
+# Aevun
+Messanger prototype
+
 #### Beyond time. Beyond loss
 
 ## Философия & Ценности
