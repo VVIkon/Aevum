@@ -1,4 +1,4 @@
-![Эвум](public/favicon (1).ico)
+![Эвум](public/Aevum-1.png)
 # Aevun
 Messanger prototype
 
