@@ -21,28 +21,28 @@ WebSocket
 
 ### Todo list
 
-[] Аутентификация JWT
-    [x] authStore
-        [x] getAccessToken
-        [x] getProfile
-    [] composible
-        [x]useAuth
-    [x] authLogin.vue
-    [] проверка сообщений
-[] MesSendo
-    [] composible
-        [x]useWebsoket
-        [] useOperTools
-    [] MesSendo.vue
-        [] концепция стилей scss
-        [] Форма и сервис
-            [] панель участников с выбором кабинета
-            [] структура сообщений
-                [] в кабинете,
-                [] иерархия сообщений,
-                [] иконки, цвета
-        [] MesSaver
-        [] MesFind
-[] MesCripto
-    [] Signal Protocol (Double Ratchet)
-    [] TLS 1.3
+- [] Аутентификация JWT
+    - [x] authStore
+        - [x] getAccessToken
+        - [x] getProfile
+    - [] composible
+        - [x]useAuth
+    - [x] authLogin.vue
+    - [] проверка сообщений
+- [] MesSendo
+    - [] composible
+        - [x]useWebsoket
+        - [] useOperTools
+    - [] MesSendo.vue
+        - [] концепция стилей scss
+        - [] Форма и сервис
+            - [] панель участников с выбором кабинета
+            - [] структура сообщений
+                - [] в кабинете,
+                - [] иерархия сообщений,
+                - [] иконки, цвета
+        - [] MesSaver
+        - [] MesFind
+- [] MesCripto
+    - [] Signal Protocol (Double Ratchet)
+    - [] TLS 1.3
