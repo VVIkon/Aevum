@@ -26,12 +26,12 @@ WebSocket
         - [x] getAccessToken
         - [x] getProfile
     - [ ] composible
-        - [x]useAuth
+        - [x] useAuth
     - [x] authLogin.vue
     - [ ] проверка сообщений
 - [ ] MesSendo
     - [ ] composible
-        - [x]useWebsoket
+        - [x] useWebsoket
         - [ ] useOperTools
     - [ ] MesSendo.vue
         - [ ] концепция стилей scss
