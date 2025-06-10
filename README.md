@@ -20,6 +20,7 @@ Vue3, Composition APi, pinia,
 WebSocket
 
 ### Todo list
+
 [] Аутентификация JWT
     [x] authStore
         [x] getAccessToken
