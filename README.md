@@ -49,3 +49,4 @@ Messanger prototype
 - [ ] MesCripto
     - [ ] Signal Protocol (Double Ratchet)
     - [ ] TLS 1.3
+- [ ] Electron (maybe)
