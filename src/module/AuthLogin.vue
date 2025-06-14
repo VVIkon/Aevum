@@ -137,7 +137,6 @@ onMounted(() => {
       overflow: hidden;
       border-color: #454545;
 
-
       .forget-password {
         width: 100%;
         margin-top: 40px;

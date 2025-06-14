@@ -9,7 +9,7 @@ import MainHeader from '@/module/MainHeader.vue';
     <div class="common-layout">
       <el-container>
         <el-header>
-          <div class="wrapper2">
+          <div class="header-wrapper">
             <MainHeader msg="Aevum" desc="Aevum - messanger prototype" />
           </div>
         </el-header>
@@ -22,8 +22,12 @@ import MainHeader from '@/module/MainHeader.vue';
 
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .el-main {
-  margin-top:30px;
+  margin-top:0px;
+}
+
+.el-header {
+  margin-bottom: 50px;
 }
 </style>

@@ -9,6 +9,9 @@ const { getAuthUser, messages, messageInput, connectionStatus, connect, send, di
 const sendMessage = () => {
   if (send()) messageInput.value = ''
 }
+const selectUser = (id: number) => {
+  console.log('>>> userId=', id);
+}
 
 onMounted(() => {
   connect()
@@ -28,8 +31,14 @@ onBeforeUnmount(() => {
         </div>
         <div class="panel-content">
           <el-scrollbar>
-            <div class="scroll-content">
-              <p v-for="item in 20" :key="'left-' + item">Left panel item {{ item }}</p>
+            <div class="scroll-user">
+              <div class="user-group" v-for="item in 20" :key="'left-' + item">
+                <div class="user-wraper">
+                  <div class="user-name" @click="selectUser(item)">
+                    Left panel item {{ item }}
+                  </div>
+                </div>
+              </div>
             </div>
           </el-scrollbar>
         </div>
@@ -39,7 +48,7 @@ onBeforeUnmount(() => {
          <span class="connection-status">Статус соединения: {{ connectionStatus }}</span>
         </div>
         <div class="panel-content">
-          <div class="scroll-box">
+          <div class="scroll-msg">
             <el-scrollbar>
               <div v-for="(message, index) in messages" :key="index">
                 <div v-if="message.event === 'sendMessage'" class="msg right-msg">
@@ -64,64 +73,47 @@ onBeforeUnmount(() => {
   </div>
 </template>
 
-<style>
+<style lang="scss" scoped>
 .messendo-container {
   display: block;
   width: 100%;
   /* height: 80vh; */
-  /* gap: 20px; */
-}
+  gap: 20px;
 
-.panel {
-  /* flex: 1; */
-  background-color: white;
-  border-radius: 4px;
-  border-color: black;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-}
+  .messendo-form {
+    display: flex;
 
-.panel-header {
-  margin-bottom: 20px;
-  font-size: 18px;
-  font-weight: bold;
-}
+    .panel {
+      display: flex;
+      color: $text-color;
+      background-color: $background-color;
+      border: 1px;
+      border-style: solid;
+      border-radius: 4px;
+      border-color: #dcdfe6;
+      padding: 10px;
+      flex-direction: column;
+    }
+    .left-panel {
+      display: flex;
+      width: 300px;
+      background-color: $left-panel-color;
+    }
 
-.panel-content {
-  flex: 1;
-  overflow: hidden;
-}
+    .right-panel {
+      display: flex;
+      width: 100%;
+      background-color: $left-panel-color;
+    }
 
-.scroll-content {
-  padding: 10px;
-}
+    .panel-header {
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: bold;
 
-.messendo-form {
-  display: flex;
-}
-.scroll-box {
-  height: 74vh;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-}
-.msg {
-  font-size: 11px;
-}
-.right-msg {
-  text-align: right;
-  color: blue;
-  margin-right: 5px;
-}
-.left-msg {
-  text-align: left;
-  color: green;
-  margin-left: 5px;
-}
-.error-msg {
-  text-align: center;
-  color: red;
+
+    }
+  }
 }
 .connection-status {
   display: inline;
@@ -129,26 +121,59 @@ onBeforeUnmount(() => {
   color: black;
   margin-right: 5px;
 }
-.left-panel {
-  display: flex;
-  width: 300px;
+    .panel-content {
+      flex: 1;
+      overflow: hidden;
+
+      .scroll-user {
+        padding: 10px;
+        height: 50vh;
+      }
+
+      .scroll-msg {
+        height: 50vh;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+
+        .msg {
+          font-size: 11px;
+        }
+        .right-msg {
+          text-align: right;
+          color: blue;
+          margin-right: 5px;
+        }
+        .left-msg {
+          text-align: left;
+          color: green;
+          margin-left: 5px;
+        }
+        .error-msg {
+          text-align: center;
+          color: red;
+        }
+      }
+
+      .input-group{
+        margin-top: 5px;
+
+        .send-btn {
+          position: relative;
+          width: 19%;
+          margin-left: 3px;
+          height: 50px;
+          z-index: 1;
+        }
+        .input-msg {
+          width: 80%;
+        }
+      }
+    }
+.user-name{
+  cursor: pointer;
 }
 
-.right-panel {
-  display: flex;
-  width: 100%;
-}
-.input-group{
-  margin-top: 5px;;
-}
-.send-btn {
-  position: relative;
-  width: 65px;
-  margin-left: 5px;
-  height: 50px;
-  z-index: 1;
-}
-.input-msg {
-  width: 90%;
-}
+
+
+
 </style>
