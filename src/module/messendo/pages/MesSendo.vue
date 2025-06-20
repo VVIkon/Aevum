@@ -45,6 +45,7 @@ const runRoomProfile = () => {
 
 onMounted(() => {
   connect();
+  setTimeout(() => getRoomProfile(), 1000);
 })
 onBeforeUnmount(() => {
   disconnect()

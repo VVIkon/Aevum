@@ -131,8 +131,7 @@ export function useWebSocket(url: string) {
           authUserId: getAuthUser.value?.userId,
         },
       }
-      console.log('>>> msg: ', msg);
-
+      // console.log('>>> msg: ', msg);
       socket.value.send(JSON.stringify(msg))
       return true
     }
