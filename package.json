@@ -17,7 +17,7 @@
   "dependencies": {
     "@types/js-cookie": "^3.0.6",
     "axios": "^1.9.0",
-    "element-plus": "^2.9.10",
+    "element-plus": "^2. 9.10",
     "js-cookie": "^3.0.5",
     "pinia": "^3.0.1",
     "save": "^2.9.0",

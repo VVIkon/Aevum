@@ -1,20 +1,50 @@
 <script setup lang="ts">
-import { Message } from '@element-plus/icons-vue'
-import { onMounted, onBeforeUnmount } from 'vue'
-import { useWebSocket } from '@/module/messendo/composable/useWebSocket'
-import { ROUTES_PATHS } from '@/constants'
+import { Message, Edit, User} from '@element-plus/icons-vue';
+import { ref,onMounted, onBeforeUnmount } from 'vue';
+import { useWebSocket } from '@/module/messendo/composable/useWebSocket';
+import { ROUTES_PATHS } from '@/constants';
+import { ElMessageBox } from 'element-plus'
+import type { IGroupProfile } from '../interfaces/iuser.profile.interface';
 
-const { getAuthUser, messages, messageInput, connectionStatus, connect, send, disconnect } = useWebSocket(ROUTES_PATHS.WEB_SOCKET)
+const selectedGroupId = ref(0);
+const selectedGroupProfile = ref<IGroupProfile|null>(null);
+
+const {
+  getAuthUser,
+  messages,
+  roomProfile,
+  messageInput,
+  connectionStatus,
+  connect,
+  sendMsg,
+  disconnect,
+  getRoomProfile,
+  getGroupContent,
+} = useWebSocket(ROUTES_PATHS.WEB_SOCKET)
 
 const sendMessage = () => {
-  if (send()) messageInput.value = ''
+  if (Number(selectedGroupId.value) === 0) {
+    ElMessageBox.alert('Нужно выбрать группу', 'Незадача', { confirmButtonText: 'OK' })
+    return;
+  }
+  if (sendMsg(Number(selectedGroupId.value), selectedGroupProfile.value?.nameGroup || '')){
+    messageInput.value = ''
+  }
 }
-const selectUser = (id: number) => {
-  console.log('>>> userId=', id);
+
+const handleGroupChange = (selectedId: number) => {
+  selectedGroupProfile.value = roomProfile.value?.groups?.find(group => group.id === selectedId) || null;
+  if (selectedGroupProfile.value) {
+    getGroupContent(selectedGroupId.value);
+  }
+};
+
+const runRoomProfile = () => {
+  getRoomProfile();
 }
 
 onMounted(() => {
-  connect()
+  connect();
 })
 onBeforeUnmount(() => {
   disconnect()
@@ -25,22 +55,31 @@ onBeforeUnmount(() => {
     <div class="messendo-form">
       <div class="panel left-panel">
         <div class="panel-header">
-          <span class="user-name">
+          <span class="user-name" @click="runRoomProfile()">
             {{ getAuthUser?.fio || '-' }}
           </span>
         </div>
         <div class="panel-content">
-          <el-scrollbar>
+          <el-scrollbar style="height: 92%">
             <div class="scroll-user">
-              <div class="user-group" v-for="item in 20" :key="'left-' + item">
-                <div class="user-wraper">
-                  <div class="user-name" @click="selectUser(item)">
-                    Left panel item {{ item }}
-                  </div>
-                </div>
-              </div>
+              <el-radio-group
+                v-model="selectedGroupId"
+                @change="handleGroupChange"
+              >
+                <el-radio v-for="(groupProfile, index) in roomProfile?.groups || []" :key="index"
+                  :value="groupProfile.id"
+                  :name="groupProfile.nameGroup"
+                  size="small"
+                >
+                  {{ groupProfile.users?.length === 1 ? groupProfile.users[0]?.fio || '' :  groupProfile.nameGroup }}
+                </el-radio>
+              </el-radio-group>
             </div>
           </el-scrollbar>
+          <div class="panel-tool">
+            <el-button class="add-group" type="primary" :icon="User" />
+            <el-button class="edit-group" type="primary" :icon="Edit" />
+          </div>
         </div>
       </div>
       <div class="panel right-panel">
@@ -50,14 +89,14 @@ onBeforeUnmount(() => {
         <div class="panel-content">
           <div class="scroll-msg">
             <el-scrollbar>
-              <div v-for="(message, index) in messages" :key="index">
-                <div v-if="message.event === 'sendMessage'" class="msg right-msg">
+              <div v-for="(message, index) in messages || []" :key="index">
+                <div v-if="['groupContent', 'newMessage'].includes(message.event) && Number(message.senderId) === Number(getAuthUser?.userId || 0)" class="msg right-msg">
                   {{ `>>> ${message.senderName}: ${message.message}` }}
                 </div>
-                <div v-if="message.event === 'newMessage'" class="msg left-msg">
+                <div v-if="['groupContent', 'newMessage'].includes(message.event) && message.senderId !== (getAuthUser?.userId || 0)" class="msg left-msg">
                   {{ `<<< ${message.senderName}: ${message.message}` }}
                 </div>
-                <div v-if="message.event === 'errorMessage'" class="msg error-msg">
+                <div v-if="['errorMessage'].includes(message.event)" class="msg error-msg">
                   {{ `!!! Error: ${message.message}` }}
                 </div>
               </div>
@@ -129,7 +168,9 @@ onBeforeUnmount(() => {
         padding: 10px;
         height: 50vh;
       }
-
+      .panel-tool {
+        padding: 5px;
+      }
       .scroll-msg {
         height: 50vh;
         border: 1px solid #dcdfe6;
