@@ -1,27 +1,28 @@
-import { ref, onUnmounted } from 'vue'
-import { useAuth } from '@/module/auth/composable/useAuth'
-import type { IMessage } from '../interfaces/imessage.interface'
-import type { IRoomProfile } from '../interfaces/iuser.profile.interface'
+import { ref, onUnmounted } from 'vue';
+import { useAuth } from '@/module/auth/composable/useAuth';
+import type { IMessage } from '../interfaces/imessage.interface';
+import type { IRoomProfile } from '../interfaces/iuser.profile.interface';
 
 export function useWebSocket(url: string) {
-  const socket = ref<WebSocket | null>(null)
-  const messages = ref<IMessage[]>([])
-  const roomProfile = ref<IRoomProfile | null>(null)
-  const messageInput = ref<string>('')
-  const isConnected = ref<boolean>(false)
-  const connectionStatus = ref('Disconnected')
-  const error = ref<Event | null>(null)
+  const socket = ref<WebSocket | null>(null);
+  const messages = ref<IMessage[]>([]);
+  const roomProfile = ref<IRoomProfile | null>(null);
+  const messageInput = ref<string>('');
+  const isConnected = ref<boolean>(false);
+  const connectionStatus = ref('Disconnected');
+  const error = ref<Event | null>(null);
 
-  const { token, getAuthUser, getProfile, isTokenated } = useAuth()
+  const { token, getAuthUser, getProfile, isTokenated } = useAuth();
 
   const connect = () => {
+    if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+      console.log('! Already connected, skipping duplicate connection');
+      return
+    }
+
     socket.value = new WebSocket(url)
-    // if (!getAuthUser.value){
-    loadProfile()
-    // }
 
     socket.value.onopen = () => {
-      // console.log('>>> 2. socket: ', JSON.stringify(socket));
       if (socket.value && socket.value.readyState === WebSocket.OPEN) {
         const msg = {
           event: 'authenticate',
@@ -29,32 +30,29 @@ export function useWebSocket(url: string) {
             token: token?.value || '',
           },
         }
-        socket.value.send(JSON.stringify(msg))
-        isConnected.value = true
-        connectionStatus.value = 'Connected'
+        socket.value.send(JSON.stringify(msg));
+        isConnected.value = true;
+        connectionStatus.value = 'Connected';
+        loadProfile();
       }
     }
 
     socket.value.onmessage = (event) => {
       if (event.data) {
-        const msg: IMessage = {
-          event: 'None',
-          authUserId: getAuthUser.value?.userId || 0,
-          senderId: 0,
-          senderName: '',
-          contentGroupId: 0,
-          message: '',
-        }
-
-        const data = JSON.parse(event.data)
+        const data = JSON.parse(event.data);
         switch (data.event) {
+          case 'authenticated':
+            // console.log('>>> authenticated user: ', data.data.user);
+            break
           case 'newMessage':
-            msg.event = data.event
-            msg.message = data.data.message
-            msg.senderId = data.data.senderId
-            msg.senderName = data.data.senderName
-            msg.contentGroupId = data.data.sendToGroup
-            messages.value.push(msg)
+            const mesTmp = {
+              event: data.event,
+              message: data.data.message,
+              senderId: data.data.senderId,
+              senderName: data.data.senderName,
+              contentGroupId: data.data.sendToGroup,
+            }
+            messages.value.push(mesTmp)
             break
           case 'roomProfile':
             if (data.data.message) {
@@ -62,19 +60,19 @@ export function useWebSocket(url: string) {
             }
             break
           case 'groupContent':
-            // console.log('>>> data: ', data)
             messages.value = [];
             if (data.data?.message?.length) {
               for (const mes of data.data?.message || []) {
-                msg.event = data.event
-                msg.message = mes.message
-                msg.senderId = mes.userid
-                msg.senderName = mes.username
-                msg.contentGroupId = mes.groupid
-                msg.contentGroupName = mes.groupname
-                messages.value.push(msg);
+                const mesTmp = {
+                  event: data.event,
+                  message: mes.message,
+                  senderId: mes.userid,
+                  senderName: mes.username,
+                  contentGroupId: mes.groupid,
+                  contentGroupName: mes.groupname,
+                }
+                messages.value.push(mesTmp);
               }
-              console.log('>>> msg: ', messages.value)
             }
             break
           default:
@@ -107,19 +105,12 @@ export function useWebSocket(url: string) {
           senderName: getAuthUser.value?.fio,
         },
       }
-      socket.value.send(JSON.stringify(msg))
-      return true
+      socket.value.send(JSON.stringify(msg));
+      return true;
     }
-    const sentErr: IMessage = {
-      event: 'errorMessage',
-      authUserId: getAuthUser.value?.userId || 0,
-      senderId: getAuthUser.value?.userId || 0,
-      senderName: getAuthUser.value?.fio,
-      message: 'Failed to send - not connected',
-    }
-    messages.value.push(sentErr)
-    return false
+    return false;
   }
+
   const getGroupContent = (groupId: number) => {
     if (groupId && socket.value && socket.value.readyState === WebSocket.OPEN) {
       const msg = {
@@ -131,16 +122,9 @@ export function useWebSocket(url: string) {
           authUserId: getAuthUser.value?.userId,
         },
       }
-      // console.log('>>> msg: ', msg);
       socket.value.send(JSON.stringify(msg))
       return true
     }
-    const sentErr: IMessage = {
-      event: 'errorMessage',
-      authUserId: getAuthUser.value?.userId || 0,
-      message: 'Failed to send - not connected',
-    }
-    messages.value.push(sentErr)
     return false
   }
 
@@ -154,25 +138,8 @@ export function useWebSocket(url: string) {
         },
       }
       socket.value.send(JSON.stringify(msg))
-      const sentMsg: IMessage = {
-        event: msg.event,
-        authUserId: getAuthUser.value?.userId || 0,
-        senderId: getAuthUser.value?.userId || 0,
-        senderName: getAuthUser.value?.fio,
-        message: 'getRoomProfile',
-      }
-      messages.value.push(sentMsg)
-      messageInput.value = ''
       return true
     }
-    const sentErr: IMessage = {
-      event: 'errorMessage',
-      authUserId: getAuthUser.value?.userId || 0,
-      senderId: getAuthUser.value?.userId || 0,
-      senderName: getAuthUser.value?.fio,
-      message: 'Failed to send - not connected',
-    }
-    messages.value.push(sentErr)
     return false
   }
 
@@ -188,7 +155,7 @@ export function useWebSocket(url: string) {
 
   const loadProfile = async () => {
     try {
-      if (isTokenated && !getAuthUser.value) {
+      if (isTokenated.value && !getAuthUser.value) {
         await getProfile()
       }
     } catch (err) {

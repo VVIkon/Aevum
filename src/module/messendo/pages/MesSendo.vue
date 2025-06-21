@@ -45,7 +45,7 @@ const runRoomProfile = () => {
 
 onMounted(() => {
   connect();
-  setTimeout(() => getRoomProfile(), 1000);
+  setTimeout(() => getRoomProfile(), 500);
 })
 onBeforeUnmount(() => {
   disconnect()
@@ -72,7 +72,7 @@ onBeforeUnmount(() => {
                   :name="groupProfile.nameGroup"
                   size="small"
                 >
-                  {{ groupProfile.users?.length === 1 ? groupProfile.users[0]?.fio || '' :  groupProfile.nameGroup }}
+                  {{ groupProfile.users?.length === 1 ? groupProfile.users[0]?.fio || '' :  `${groupProfile.nameGroup} (${groupProfile.users?.length})` }}
                 </el-radio>
               </el-radio-group>
             </div>

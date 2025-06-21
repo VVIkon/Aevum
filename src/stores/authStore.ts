@@ -32,10 +32,6 @@ export const useAuthStore = defineStore('auth', {
         state.token = Cookies.get('token') || '';
         return state.token;
     },
-    // isTokenated(state): boolean {
-    //   return !!state.token
-    //   // return !!this.getToken
-    // }
   },
 
   actions: {
@@ -47,7 +43,6 @@ export const useAuthStore = defineStore('auth', {
           Cookies.set('token', access_token, { expires: Number(expires) });
           this.status = 'got_token';
           this.token = await access_token;
-          // console.log('>>> 0 isTokenated.value: ', !!this.token );
         }
       } catch (error) {
         console.error('getAccessToken Error: ', error)
@@ -57,13 +52,11 @@ export const useAuthStore = defineStore('auth', {
     async getProfile() {
       try {
         const token = this.token;
-        // console.log('>>> getProfile.token: ', token)
         const { data } = await axios.get(AUTH_PATHS.AUTH_PROFILE, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
-        // console.log('>>> getProfile.data: ', data)
         if (data) {
           this.status = 'got_user';
           this.authUser = await data;

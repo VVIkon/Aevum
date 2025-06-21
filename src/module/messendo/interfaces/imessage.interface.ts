@@ -11,10 +11,10 @@ export interface IContent {
 
 export interface IMessage {
   event: string;
-  authUserId: number;
+  authUserId?: number;
   senderId?: number;
   senderName?: string;
   contentGroupId?: number;
   contentGroupName?: string;
-  message?: string | IContent[];
+  message: string | IContent[];
 }
