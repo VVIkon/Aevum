@@ -29,7 +29,7 @@ Messanger prototype
   - [x] создание таблицы Users, проработка ролей
   - [x] authStore
     - [x] getAccessToken
-    - [x] getProfile
+    - [x] getCurrUserProfile
   - [ ] composible
     - [x] useAuth
   - [x] authLogin.vue

@@ -1,181 +1,90 @@
-import { ref, onUnmounted } from 'vue';
+// composables/useWebSocket.ts
+import { useWebSocketStore } from '@/stores/websocket.store';
+import { onUnmounted, computed, ref } from 'vue';
 import { useAuth } from '@/module/auth/composable/useAuth';
-import type { IMessage } from '../interfaces/imessage.interface';
-import type { IRoomProfile } from '../interfaces/iuser.profile.interface';
 
-export function useWebSocket(url: string) {
-  const socket = ref<WebSocket | null>(null);
-  const messages = ref<IMessage[]>([]);
-  const roomProfile = ref<IRoomProfile | null>(null);
-  const messageInput = ref<string>('');
-  const isConnected = ref<boolean>(false);
-  const connectionStatus = ref('Disconnected');
-  const error = ref<Event | null>(null);
+export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
+  const { getAuthUser, waitForAuth } = useAuth();
 
-  const { token, getAuthUser, getProfile, isTokenated } = useAuth();
+  const websocketStore = useWebSocketStore();
 
-  const connect = () => {
-    if (socket.value && socket.value.readyState === WebSocket.OPEN) {
-      console.log('! Already connected, skipping duplicate connection');
-      return
-    }
+  const connectionId = ref<number | null>(null);
+  const isInitialized = ref(false);
+  const initializationError = ref<Error | null>(null);
 
-    socket.value = new WebSocket(url)
+  // Реактивные данные соединения
+  const connection = computed(() => (
+    connectionId.value
+    ? websocketStore.getConnection(connectionId.value || 0)
+    : null
+  ));
 
-    socket.value.onopen = () => {
-      if (socket.value && socket.value.readyState === WebSocket.OPEN) {
-        const msg = {
-          event: 'authenticate',
-          data: {
-            token: token?.value || '',
-          },
-        }
-        socket.value.send(JSON.stringify(msg));
-        isConnected.value = true;
-        connectionStatus.value = 'Connected';
-        loadProfile();
+   // Очистка при размонтировании
+  onUnmounted(() => {
+    websocketStore.removeConnection(connectionId.value || 0);
+  });
+
+  // Реактивные данные
+  const messages = computed(() => connection.value?.messages || []);
+  const isConnected = computed(() => connection.value?.isConnected || false);
+  const getUser = computed(() => {
+    const { getAuthUser } = useAuth();
+    return getAuthUser;
+  });
+
+// Инициализация
+  const init = async () => {
+    try {
+      await waitForAuth();
+      const id = getAuthUser.value?.userId || 0;
+      connectionId.value = id;
+      if (!websocketStore.getConnection(id)) {
+        console.log(`>>> Нет соединения по id=${id}`);
+        websocketStore.createConnection(id, websocketUrl);
       }
-    }
 
-    socket.value.onmessage = (event) => {
-      if (event.data) {
-        const data = JSON.parse(event.data);
-        switch (data.event) {
-          case 'authenticated':
-            // console.log('>>> authenticated user: ', data.data.user);
-            break
-          case 'newMessage':
-            const mesTmp = {
-              event: data.event,
-              message: data.data.message,
-              senderId: data.data.senderId,
-              senderName: data.data.senderName,
-              contentGroupId: data.data.sendToGroup,
-            }
-            messages.value.push(mesTmp)
-            break
-          case 'roomProfile':
-            if (data.data.message) {
-              roomProfile.value = data.data.message
-            }
-            break
-          case 'groupContent':
-            messages.value = [];
-            if (data.data?.message?.length) {
-              for (const mes of data.data?.message || []) {
-                const mesTmp = {
-                  event: data.event,
-                  message: mes.message,
-                  senderId: mes.userid,
-                  senderName: mes.username,
-                  contentGroupId: mes.groupid,
-                  contentGroupName: mes.groupname,
-                }
-                messages.value.push(mesTmp);
-              }
-            }
-            break
-          default:
-            break
-        }
-      }
-    }
+      // websocketStore.getRoomProfile(id);
+      // if (initialGroupId) {
+      //   getGroupContent(initialGroupId);
+      // }
 
-    socket.value.onerror = (err) => {
-      error.value = err
-      isConnected.value = false
+      isInitialized.value = true;
+    } catch (error) {
+      initializationError.value = error as Error;
+      throw error;
     }
+  };
 
-    socket.value.onclose = () => {
-      isConnected.value = false
-      connectionStatus.value = 'Disconnected'
-    }
-  }
-
-  const sendMsg = (sendToGroup: number, groupName: string) => {
-    if (socket.value && socket.value.readyState === WebSocket.OPEN) {
-      const msg = {
-        event: 'sendMessage',
-        data: {
-          token: token?.value || '',
-          message: messageInput.value,
-          sendToGroup,
-          groupName,
-          senderId: getAuthUser.value?.userId,
-          senderName: getAuthUser.value?.fio,
-        },
-      }
-      socket.value.send(JSON.stringify(msg));
-      return true;
-    }
-    return false;
-  }
-
+  // Методы
+  const sendMessage = (message: string, groupId: number, groupName: string) => {
+    websocketStore.sendMessage(connectionId.value || 0, message, groupId, groupName);
+  };
   const getGroupContent = (groupId: number) => {
-    if (groupId && socket.value && socket.value.readyState === WebSocket.OPEN) {
-      const msg = {
-        event: 'getGroupContent',
-        data: {
-          token: token?.value || '',
-          message: 'getGroupContent',
-          groupId,
-          authUserId: getAuthUser.value?.userId,
-        },
-      }
-      socket.value.send(JSON.stringify(msg))
-      return true
-    }
-    return false
-  }
+    websocketStore.getGroupContent(connectionId.value || 0, groupId);
+  };
 
   const getRoomProfile = () => {
-    if (socket.value && socket.value.readyState === WebSocket.OPEN) {
-      const msg = {
-        event: 'getRoomProfile',
-        data: {
-          token: token?.value || '',
-          message: 'getRoomProfile',
-        },
-      }
-      socket.value.send(JSON.stringify(msg))
-      return true
-    }
-    return false
+    websocketStore.getRoomProfile(connectionId.value || 0);
   }
 
-  const disconnect = () => {
-    if (socket.value) {
-      socket.value.close()
-    }
+  const createNewRoom = () => {
+    websocketStore.createNewRoom(connectionId.value || 0);
   }
 
-  onUnmounted(() => {
-    disconnect()
-  })
 
-  const loadProfile = async () => {
-    try {
-      if (isTokenated.value && !getAuthUser.value) {
-        await getProfile()
-      }
-    } catch (err) {
-      console.error(err)
-    }
-  }
 
   return {
-    getAuthUser,
-    socket,
+    connectionId,
+    isInitialized,
+    initializationError,
+    connection,
     messages,
-    roomProfile,
-    messageInput,
+    getUser,
     isConnected,
-    connectionStatus,
-    error,
-    connect,
-    disconnect,
-    sendMsg,
-    getRoomProfile,
+    init,
+    sendMessage,
     getGroupContent,
-  }
+    getRoomProfile,
+    createNewRoom,
+  };
 }
