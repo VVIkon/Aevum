@@ -19,7 +19,6 @@ export const useAuth = () => {
 
   const waitForAuth = () => {
     return new Promise<void>((resolve, reject) => {
-      console.log('>>> status.value: ', status.value);
 
       if (isTokenated.value && !getAuthUser.value) {
         getCurrUserProfile();
@@ -35,7 +34,6 @@ export const useAuth = () => {
       const unwatch = watch(
         isAuthenticated,
         (authenticated) => {
-          console.log('>>> status.value: ', status.value);
           if (authenticated) {
             unwatch(); // Прекращаем наблюдение
             resolve();

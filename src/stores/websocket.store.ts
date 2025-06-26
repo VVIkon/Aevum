@@ -7,7 +7,6 @@ import type { IRoomProfile } from '@/module/messendo/interfaces/iuser.profile.in
 interface WebSocketConnection {
   id: number;
   socket: WebSocket | null;
-  messages: IMessage[];
   roomProfile: IRoomProfile | null;
   profileStatus: number; // 0-не было загрузки, 1-нет профиля, 2-профиль загружен
   isConnected: boolean;
@@ -18,11 +17,13 @@ interface WebSocketConnection {
 
 interface State {
   connections: Record<number, WebSocketConnection>;
+  messages: IMessage[];
 }
 
 export const useWebSocketStore = defineStore('websocket', {
   state: (): State => ({
     connections: {},
+    messages: [],
   }),
 
   actions: {
@@ -35,7 +36,7 @@ export const useWebSocketStore = defineStore('websocket', {
       this.connections[id] = {
         id,
         socket: null,
-        messages: [],
+        // messages: [],
         roomProfile: null,
         profileStatus: 0,
         isConnected: false,
@@ -65,7 +66,7 @@ export const useWebSocketStore = defineStore('websocket', {
       connection.connectionStatus = 'Connecting';
 
       connection.socket.onopen = async () => {
-        console.log(`>>> connection.socket: `, connection)
+        // console.log(`>>> connection.socket: `, connection)
         if (connection.socket && connection.socket.readyState === WebSocket.OPEN) {
           const msg = {
             event: 'authenticate',
@@ -100,6 +101,8 @@ export const useWebSocketStore = defineStore('websocket', {
     },
 
     handleIncomingMessage(id: number, data: any) {
+      console.log(`>>> handleIncomingMessage id: `, id);
+
       const connection = this.connections[id];
       if (!connection) return;
 
@@ -114,20 +117,18 @@ export const useWebSocketStore = defineStore('websocket', {
             senderName: data.data.senderName,
             contentGroupId: data.data.sendToGroup,
           };
-          connection.messages.push(mesTmp);
+          console.log(`>>> newMessage: `, mesTmp)
+          this.messages.push(mesTmp);
           break;
         case 'roomProfile':
-          console.log(`>>> roomProfile: `, data.data);
-
           connection.profileStatus = !data.data.message ? 1 : 2;
           if (data.data.message) {
             connection.profileStatus = 2;
             connection.roomProfile = data.data.message;
-            console.log(`>>> connection.roomProfile: `, connection.roomProfile);
           }
           break;
         case 'groupContent':
-          connection.messages = [];
+          this.messages = [];
           if (data.data?.message?.length) {
             for (const mes of data.data?.message || []) {
               const mesTmp = {
@@ -138,12 +139,12 @@ export const useWebSocketStore = defineStore('websocket', {
                 contentGroupId: mes.groupid,
                 contentGroupName: mes.groupname,
               };
-              connection.messages.push(mesTmp);
+              this.messages.push(mesTmp);
             }
           }
           break;
         case 'newRoom':
-          connection.messages = [];
+          this.messages = [];
           if (data.data?.message) {
 
           }
@@ -302,6 +303,9 @@ disconnect(id: number) {
   getters: {
     getConnection: (state) => {
       return (id: number) => state.connections[id];
+    },
+    getMessages: (state) => {
+      return () => state.messages;
     },
   },
 });

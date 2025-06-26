@@ -14,7 +14,7 @@ export interface IMessage {
   authUserId?: number;
   senderId?: number;
   senderName?: string;
-  contentGroupId?: number;
+  contentGroupId: number | null;
   contentGroupName?: string;
   message: string | IContent[];
 }

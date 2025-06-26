@@ -37,8 +37,7 @@ export const useAuthStore = defineStore('auth', {
     async getAccessToken(name: string, pass: string) {
       try {
         const data = await axios.post(AUTH_PATHS.AUTH_URL, { name, pass });
-        console.log('>>> data: ', data);
-
+        // console.log('>>> data: ', data);
         const { access_token, expires } = data?.data;
         if (access_token && expires) {
           Cookies.set('token', access_token, { expires: Number(expires) });

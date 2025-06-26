@@ -7,7 +7,6 @@ export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
   const { getAuthUser, waitForAuth } = useAuth();
 
   const websocketStore = useWebSocketStore();
-
   const connectionId = ref<number | null>(null);
   const isInitialized = ref(false);
   const initializationError = ref<Error | null>(null);
@@ -25,7 +24,8 @@ export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
   });
 
   // Реактивные данные
-  const messages = computed(() => connection.value?.messages || []);
+  const messages = computed(() => websocketStore.getMessages());
+  // const messages = computed(() => connection.value?.messages || []);
   const isConnected = computed(() => connection.value?.isConnected || false);
   const getUser = computed(() => {
     const { getAuthUser } = useAuth();
@@ -39,15 +39,8 @@ export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
       const id = getAuthUser.value?.userId || 0;
       connectionId.value = id;
       if (!websocketStore.getConnection(id)) {
-        console.log(`>>> Нет соединения по id=${id}`);
         websocketStore.createConnection(id, websocketUrl);
       }
-
-      // websocketStore.getRoomProfile(id);
-      // if (initialGroupId) {
-      //   getGroupContent(initialGroupId);
-      // }
-
       isInitialized.value = true;
     } catch (error) {
       initializationError.value = error as Error;

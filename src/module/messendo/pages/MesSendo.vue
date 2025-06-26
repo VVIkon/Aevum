@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Message, Edit, User} from '@element-plus/icons-vue';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { ElMessageBox } from 'element-plus'
 import type { IGroupProfile } from '../interfaces/iuser.profile.interface';
 import { useWebSocket } from '@/module/messendo/composable/useWebSocket';
@@ -14,7 +14,7 @@ const {
   connection,
   // isInitialized,
   // initializationError,
-  connectionId,
+  // connectionId,
   messages,
   isConnected,
   getUser,
@@ -28,7 +28,7 @@ const {
 onMounted(async () => {
   try {
     await init();
-    console.log('WebSocket initialized with connectionId:', connectionId.value);
+    // console.log('WebSocket initialized with connectionId:', connectionId.value);
     getRoomProfile();
   } catch (error) {
     console.error('Failed to initialize WebSocket:', error);
@@ -36,11 +36,11 @@ onMounted(async () => {
 });
 
 // Реакция на изменение isInitialized
-// watch(isInitialized, (initialized) => {
-//   if (initialized) {
-//     console.log('Дополнительные действия после инициализации');
-//   }
-// });
+watch(messages, (newMessages) => {
+  // if (newMessages) {
+    console.log('>>> watch Messages: ', newMessages);
+  // }
+});
 
 const createRoom = () => {
   createNewRoom();
@@ -58,6 +58,8 @@ const sendMsg = () => {
     selectedGroupProfile.value?.nameGroup || ''
   )
   messageInput.value = ''
+  console.log(`>>> messages: `, messages.value);
+
 }
 
 const handleGroupChange = (selectedId: number) => {
@@ -111,16 +113,18 @@ const handleGroupChange = (selectedId: number) => {
           <div class="scroll-msg">
             <el-scrollbar>
               <div v-for="(message, index) in messages || []" :key="index">
-                <div v-if="['groupContent', 'newMessage'].includes(message.event) && Number(message.senderId) === Number(getUser?.value?.userId || 0)" class="msg right-msg">
-                  {{ `>>> ${message.senderName}: ${message.message}` }}
+                  <template v-if="message.contentGroupId === selectedGroupId">
+                    <div v-if="['groupContent', 'newMessage'].includes(message.event) && Number(message.senderId) === Number(getUser?.value?.userId || 0)" class="msg right-msg">
+                      {{ `>>> ${message.senderName}: ${message.message}` }}
+                    </div>
+                    <div v-if="['groupContent', 'newMessage'].includes(message.event) && message.senderId !== (getUser?.value?.userId || 0)" class="msg left-msg">
+                      {{ `<<< ${message.senderName}: ${message.message}` }}
+                    </div>
+                    <div v-if="['errorMessage'].includes(message.event)" class="msg error-msg">
+                      {{ `!!! Error: ${message.message}` }}
+                    </div>
+                </template>
                 </div>
-                <div v-if="['groupContent', 'newMessage'].includes(message.event) && message.senderId !== (getUser?.value?.userId || 0)" class="msg left-msg">
-                  {{ `<<< ${message.senderName}: ${message.message}` }}
-                </div>
-                <div v-if="['errorMessage'].includes(message.event)" class="msg error-msg">
-                  {{ `!!! Error: ${message.message}` }}
-                </div>
-              </div>
             </el-scrollbar>
           </div>
           <div class="input-group">
