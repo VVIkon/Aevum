@@ -49,7 +49,7 @@ Messanger prototype
           - [ ] Ссылочная система
       - [X] панель RoomProfile
         - [X] операции выбора и загрузки RoomProfile
-        - [X] badge при пришедшем непрочитанном сообщении
+        - [X] badge при пришедшем непрочитанном сообщении (notifiForGroup)
         - [ ] Операции RoomProfile
           - [ ] создание, изменени, удаление RoomProfile
       - [ ] панель сообщений

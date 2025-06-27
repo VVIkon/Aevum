@@ -100,12 +100,12 @@ export const useWebSocketStore = defineStore('websocket', {
       };
     },
 
-    notifyForGroup(id: number, groupId: number, senderId: number, flag: boolean){
+    notifiForGroup(id: number, groupId: number, senderId: number, flag: boolean){
       const connection = this.connections[id];
       const groups = connection?.roomProfile?.groups || [];
       if (groups.length) {
         const ind = groups.findIndex(el=> el.id === groupId)
-        groups[ind].notifycation = { hasMessage: flag, senderId: senderId};
+        groups[ind].notification = { hasMessage: flag, senderId: senderId};
       }
     },
 
@@ -128,7 +128,7 @@ export const useWebSocketStore = defineStore('websocket', {
           };
           console.log(`>>> newMessage: `, mesTmp)
           this.messages.push(mesTmp);
-          this.notifyForGroup(id, data.data.sendToGroup, data.data.senderId, true);
+          this.notifiForGroup(id, data.data.sendToGroup, data.data.senderId, true);
           break;
         case 'roomProfile':
           connection.profileStatus = !data.data.message ? 1 : 2;
@@ -245,7 +245,7 @@ disconnect(id: number) {
         },
       };
       this.sendWhenReady(connection, msg);
-      this.notifyForGroup(id, sendToGroup, getAuthUser.value.userId,false);
+      this.notifiForGroup(id, sendToGroup, getAuthUser.value.userId,false);
       return true;
     },
     /**
