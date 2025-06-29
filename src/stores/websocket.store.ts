@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { useAuth } from '@/module/auth/composable/useAuth';
 import type { IMessage } from '@/module/messendo/interfaces/imessage.interface';
 import type { IRoomProfile } from '@/module/messendo/interfaces/iuser.profile.interface';
+import { dataOptions } from '../constants/index';
 
 interface WebSocketConnection {
   id: number;
@@ -110,8 +111,8 @@ export const useWebSocketStore = defineStore('websocket', {
     },
 
     handleIncomingMessage(id: number, data: any) {
-      console.log(`>>> handleIncomingMessage id: `, id);
-
+      // console.log(`>>> handleIncomingMessage id: `, id);
+      // console.log(`>>> data: `, data.data)
       const connection = this.connections[id];
       if (!connection) return;
 
@@ -125,8 +126,8 @@ export const useWebSocketStore = defineStore('websocket', {
             senderId: data.data.senderId,
             senderName: data.data.senderName,
             contentGroupId: data.data.sendToGroup,
+            dateCreate: (new Date( data.data.dateCreate)).toLocaleString('ru-RU', dataOptions),
           };
-          console.log(`>>> newMessage: `, mesTmp)
           this.messages.push(mesTmp);
           this.notifiForGroup(id, data.data.sendToGroup, data.data.senderId, true);
           break;
@@ -148,6 +149,7 @@ export const useWebSocketStore = defineStore('websocket', {
                 senderName: mes.username,
                 contentGroupId: mes.groupid,
                 contentGroupName: mes.groupname,
+                dateCreate: (new Date( mes.datecreate)).toLocaleString('ru-RU', dataOptions),
               };
               this.messages.push(mesTmp);
             }

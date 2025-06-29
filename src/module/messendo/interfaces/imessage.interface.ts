@@ -4,9 +4,9 @@ export interface IContent {
   groupname: string;
   userid: number
   username: string;
-  message: string
-  active: number
-  datecreate: Date
+  message: string;
+  active: number;
+  datecreate: Date;
 }
 
 export interface IMessage {
@@ -17,4 +17,5 @@ export interface IMessage {
   contentGroupId: number | null;
   contentGroupName?: string;
   message: string | IContent[];
+  dateCreate: string | Date | null;
 }

@@ -23,7 +23,7 @@ export interface IGroupProfile {
 	active: number;
 	readOnly: number;
 	dateCreate: Date;
-  notifycation: { hasMessage: boolean, senderId: number} | null
+  notification: { hasMessage: boolean, senderId: number} | null
 }
 
 export interface IRoomProfile {

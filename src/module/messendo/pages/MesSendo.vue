@@ -51,7 +51,7 @@ const sendMsg = () => {
   }
   sendMessage(messageInput.value, Number(selectedGroupId.value), selectedGroupProfile.value?.nameGroup || '');
   messageInput.value = '';
-  console.log(`>>> messages: `, messages.value);
+  // console.log(`>>> messages: `, messages.value);
 };
 
 const handleGroupChange = (selectedId: number) => {
@@ -89,7 +89,7 @@ watch( messages, () => scrollToBottom(), { deep: true });
               <el-radio-group v-if="connection?.profileStatus === 2" v-model="selectedGroupId" @change="handleGroupChange">
                 <el-radio v-for="(groupProfile, index) in connection?.roomProfile?.groups || []" :key="index" :value="groupProfile.id" :name="groupProfile.nameGroup" size="small">
                   {{ groupProfile.users?.length === 2 ? groupProfile.users.filter((el) => el.id != getUser?.value?.userId || 0)[0]?.fio || '' : `${groupProfile.nameGroup}` }}
-                  <el-badge v-show="groupProfile.notifycation?.hasMessage && groupProfile.notifycation?.senderId !== getUser?.value?.userId || 0" is-dot class="badge-item"></el-badge>
+                  <el-badge v-show="groupProfile.notification?.hasMessage && groupProfile.notification?.senderId !== getUser?.value?.userId || 0" is-dot class="badge-item"></el-badge>
                     <!-- <el-tooltip class="box-item" effect="dark" placement="top" :content="`Gr: ${groupProfile.id} (${groupProfile.users?.map((el) => `${el.fio}[${el.id}]`).join(', ')})`">
                     </el-tooltip> -->
                 </el-radio>
@@ -115,10 +115,15 @@ watch( messages, () => scrollToBottom(), { deep: true });
               <div v-for="(message, index) in messages || []" :key="index">
                 <template v-if="message.contentGroupId === selectedGroupId">
                   <div v-if="['groupContent', 'newMessage'].includes(message.event) && Number(message.senderId) === Number(getUser?.value?.userId || 0)" class="msg right-msg">
-                    {{ `>>> ${message.senderName}: ${message.message}` }}
+                    <div class="sender-name">{{ message.senderName }}</div>
+                    <div class="sender-message">{{ message.message }}</div>
+                    <div class="sender-time">{{ message.dateCreate }}</div>
                   </div>
                   <div v-if="['groupContent', 'newMessage'].includes(message.event) && message.senderId !== (getUser?.value?.userId || 0)" class="msg left-msg">
-                    {{ `<<< ${message.senderName}: ${message.message}` }}
+                    <div class="sender-name">{{ message.senderName }}</div>
+                    <div class="sender-message">{{ message.message }}</div>
+                    <div class="sender-time">{{ message.dateCreate }}</div>
+                    <!-- {{ `<<< ${message.senderName}: ${message.message}` }} -->
                   </div>
                   <div v-if="['errorMessage'].includes(message.event)" class="msg error-msg">
                     {{ `!!! Error: ${message.message}` }}
@@ -195,26 +200,46 @@ watch( messages, () => scrollToBottom(), { deep: true });
     padding: 5px;
   }
   .scroll-msg {
+    background-color: $background-color;
     height: 50vh;
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
+    border: 1px solid #bccef7;
+    border-radius: 6px;
 
     .msg {
       font-size: 11px;
+      background-color: $message-color;
+      color: rgb(70, 28, 4);
+      margin: 5px;
+      padding: 3px;
+      width: 45%;
+      border: 1px solid #a79779;
+      border-radius: 6px;
     }
     .right-msg {
-      text-align: right;
+
+      text-align: left;
       color: blue;
-      margin-right: 5px;
+      margin: 0px 54%;
     }
     .left-msg {
       text-align: left;
       color: green;
-      margin-left: 5px;
+      margin: 0, 5px;
     }
     .error-msg {
       text-align: center;
       color: red;
+    }
+    .sender-name{
+      text-align: left;
+      background-color: $header-message-color;
+    }
+    .sender-message{
+      color: rgb(20, 19, 12)
+    }
+    .sender-time{
+      text-align: right;
+      color: rgb(161 158 138);
     }
   }
 
