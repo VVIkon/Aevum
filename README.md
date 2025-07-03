@@ -36,7 +36,7 @@ Messanger prototype
   - [ ] проверка сообщений
 - [ ] MesSendo
   - [x] создание таблиц rooms, groups, contents
-  - [ ] composible
+  - [x] composible
     - [x] useWebsoket
   - [ ] MesSendo.vue
     - [x] концепция стилей scss

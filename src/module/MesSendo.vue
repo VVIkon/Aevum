@@ -2,9 +2,10 @@
 import { Message, Edit, User } from '@element-plus/icons-vue';
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { ElMessageBox, ElScrollbar } from 'element-plus';
-import type { IGroupProfile } from '../interfaces/iuser.profile.interface';
+import type { IGroupProfile, INewGroup } from './messendo/interfaces/messendo.interface';
 import { useWebSocket } from '@/module/messendo/composable/useWebSocket';
 import { ROUTES_PATHS } from '@/constants';
+import msGroupDialog from '@/module/messendo/components/msGroupDialog.vue';
 
 type ScrollbarInstance = InstanceType<typeof ElScrollbar> & {
   wrapRef: HTMLDivElement;
@@ -13,6 +14,7 @@ const scrollbarRef = ref<ScrollbarInstance | null>(null);
 const selectedGroupId = ref(0);
 const selectedGroupProfile = ref<IGroupProfile | null>(null);
 const messageInput = ref('');
+const groupDialog = ref<InstanceType<typeof msGroupDialog> | null>(null);
 
 const {
   connection,
@@ -26,21 +28,31 @@ const {
   sendMessage,
   getRoomProfile,
   getGroupContent,
-  createNewRoom,
+  // createNewRoom,
+  createNewGroup
 } = useWebSocket(ROUTES_PATHS.WEB_SOCKET, selectedGroupId.value);
 
 onMounted(async () => {
   try {
     await init();
-    // console.log('WebSocket initialized with connectionId:', connectionId.value);
     getRoomProfile();
   } catch (error) {
     console.error('Failed to initialize WebSocket:', error);
   }
 });
 
-const createRoom = () => {
-  createNewRoom();
+// const createRoom = () => {
+//   createNewRoom();
+//   getRoomProfile();
+// };
+const createGroup = () => {
+  groupDialog.value?.openForm();
+};
+
+const handleNewGroupSubmit = (payload: INewGroup) => {
+  payload.active = Number(payload.active);
+  payload.readOnly = Number(payload.readOnly);
+  createNewGroup(payload);
   getRoomProfile();
 };
 
@@ -51,7 +63,6 @@ const sendMsg = () => {
   }
   sendMessage(messageInput.value, Number(selectedGroupId.value), selectedGroupProfile.value?.nameGroup || '');
   messageInput.value = '';
-  // console.log(`>>> messages: `, messages.value);
 };
 
 const handleGroupChange = (selectedId: number) => {
@@ -63,16 +74,16 @@ const handleGroupChange = (selectedId: number) => {
 
 const scrollToBottom = () => {
   nextTick(() => {
-    // if (scrollbarRef.value) {
-    //   const scrollbar = scrollbarRef.value;
-    //   scrollbar.setScrollTop(scrollbar.wrapRef.scrollHeight);
-    // }
     if (scrollbarRef.value?.wrapRef) {
-      scrollbarRef.value.wrapRef.scrollTop = scrollbarRef.value.wrapRef.scrollHeight
+      scrollbarRef.value.wrapRef.scrollTop = scrollbarRef.value.wrapRef.scrollHeight;
     }
   });
 };
-watch( messages, () => scrollToBottom(), { deep: true });
+
+watch(messages, () => scrollToBottom(), { deep: true });
+// watch(connection, () => console.log(`>>> connection users: `, connection?.value?.roomProfile?.users || ''), { deep: true });
+// watch(selectedGroupProfile, () => console.log(`>>> selectedGroupProfile: `, selectedGroupProfile.value), { deep: true });
+
 </script>
 <template>
   <div class="messendo-container">
@@ -89,8 +100,8 @@ watch( messages, () => scrollToBottom(), { deep: true });
               <el-radio-group v-if="connection?.profileStatus === 2" v-model="selectedGroupId" @change="handleGroupChange">
                 <el-radio v-for="(groupProfile, index) in connection?.roomProfile?.groups || []" :key="index" :value="groupProfile.id" :name="groupProfile.nameGroup" size="small">
                   {{ groupProfile.users?.length === 2 ? groupProfile.users.filter((el) => el.id != getUser?.value?.userId || 0)[0]?.fio || '' : `${groupProfile.nameGroup}` }}
-                  <el-badge v-show="groupProfile.notification?.hasMessage && groupProfile.notification?.senderId !== getUser?.value?.userId || 0" is-dot class="badge-item"></el-badge>
-                    <!-- <el-tooltip class="box-item" effect="dark" placement="top" :content="`Gr: ${groupProfile.id} (${groupProfile.users?.map((el) => `${el.fio}[${el.id}]`).join(', ')})`">
+                  <el-badge v-show="(groupProfile.notification?.hasMessage && groupProfile.notification?.senderId !== getUser?.value?.userId) || 0" is-dot class="badge-item"></el-badge>
+                  <!-- <el-tooltip class="box-item" effect="dark" placement="top" :content="`Gr: ${groupProfile.id} (${groupProfile.users?.map((el) => `${el.fio}[${el.id}]`).join(', ')})`">
                     </el-tooltip> -->
                 </el-radio>
               </el-radio-group>
@@ -100,7 +111,8 @@ watch( messages, () => scrollToBottom(), { deep: true });
             <span v-if="connection?.profileStatus === 1" class="profile-not-load">Активный профиль не найден</span>
           </div>
           <div class="panel-tool">
-            <el-button class="add-group" type="primary" :icon="User" @click="createRoom" />
+            <!-- <el-button class="add-group" type="primary" :icon="House" @click="createRoom" /> -->
+            <el-button class="add-group" type="primary" :icon="User" @click="createGroup" />
             <el-button class="edit-group" type="primary" :icon="Edit" />
           </div>
         </div>
@@ -116,14 +128,13 @@ watch( messages, () => scrollToBottom(), { deep: true });
                 <template v-if="message.contentGroupId === selectedGroupId">
                   <div v-if="['groupContent', 'newMessage'].includes(message.event) && Number(message.senderId) === Number(getUser?.value?.userId || 0)" class="msg right-msg">
                     <div class="sender-name">{{ message.senderName }}</div>
-                    <div class="sender-message">{{ message.message }}</div>
+                    <div class="sender-message" v-html="message.message"></div>
                     <div class="sender-time">{{ message.dateCreate }}</div>
                   </div>
                   <div v-if="['groupContent', 'newMessage'].includes(message.event) && message.senderId !== (getUser?.value?.userId || 0)" class="msg left-msg">
                     <div class="sender-name">{{ message.senderName }}</div>
-                    <div class="sender-message">{{ message.message }}</div>
+                    <div class="sender-message" v-html="message.message"></div>
                     <div class="sender-time">{{ message.dateCreate }}</div>
-                    <!-- {{ `<<< ${message.senderName}: ${message.message}` }} -->
                   </div>
                   <div v-if="['errorMessage'].includes(message.event)" class="msg error-msg">
                     {{ `!!! Error: ${message.message}` }}
@@ -139,6 +150,14 @@ watch( messages, () => scrollToBottom(), { deep: true });
         </div>
       </div>
     </div>
+    <msGroupDialog
+      ref="groupDialog"
+      :roomId = "connection?.roomProfile?.id || 0"
+      :groupProfile="selectedGroupProfile || null"
+      :availableUsers="connection?.roomProfile?.users || []"
+      :currentUser="getUser.value"
+      @submit="handleNewGroupSubmit"
+    ></msGroupDialog>
   </div>
 </template>
 
@@ -211,15 +230,14 @@ watch( messages, () => scrollToBottom(), { deep: true });
       color: rgb(70, 28, 4);
       margin: 5px;
       padding: 3px;
-      width: 45%;
+      width: 96%;
       border: 1px solid #a79779;
       border-radius: 6px;
     }
     .right-msg {
-
       text-align: left;
       color: blue;
-      margin: 0px 54%;
+      margin: 0px 20px;
     }
     .left-msg {
       text-align: left;
@@ -230,14 +248,15 @@ watch( messages, () => scrollToBottom(), { deep: true });
       text-align: center;
       color: red;
     }
-    .sender-name{
+    .sender-name {
       text-align: left;
       background-color: $header-message-color;
     }
-    .sender-message{
-      color: rgb(20, 19, 12)
+    .sender-message {
+      color: rgb(20, 19, 12);
+      padding: 3px 5px;
     }
-    .sender-time{
+    .sender-time {
       text-align: right;
       color: rgb(161 158 138);
     }

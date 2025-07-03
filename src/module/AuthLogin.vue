@@ -13,7 +13,7 @@ const router = useRouter();
 const validateName = (rule: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('Введите логин или email (> 4 букв)'))
-  } else if ([...value].length <= 4) {
+  } else if ([...value].length <= 3) {
     callback(new Error(" Логин должен быть больше 4 букв"))
   } else {
       if (!ruleFormRef.value) return;
@@ -25,7 +25,7 @@ const validateName = (rule: any, value: any, callback: any) => {
 const validatePass = (rule: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('Введите пароль'))
-  }else if ([...value].length <= 4) {
+  }else if ([...value].length <= 3) {
     callback(new Error("Пароль должен быть больше 4 букв"))
   } else {
     if (!ruleFormRef.value) return;

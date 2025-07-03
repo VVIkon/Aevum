@@ -2,6 +2,7 @@
 import { useWebSocketStore } from '@/stores/websocket.store';
 import { onUnmounted, computed, ref } from 'vue';
 import { useAuth } from '@/module/auth/composable/useAuth';
+import type { INewGroup } from '@/module/messendo/interfaces/messendo.interface';
 
 export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
   const { getAuthUser, waitForAuth } = useAuth();
@@ -12,13 +13,9 @@ export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
   const initializationError = ref<Error | null>(null);
 
   // Реактивные данные соединения
-  const connection = computed(() => (
-    connectionId.value
-    ? websocketStore.getConnection(connectionId.value || 0)
-    : null
-  ));
+  const connection = computed(() => (connectionId.value ? websocketStore.getConnection(connectionId.value || 0) : null));
 
-   // Очистка при размонтировании
+  // Очистка при размонтировании
   onUnmounted(() => {
     websocketStore.removeConnection(connectionId.value || 0);
   });
@@ -32,7 +29,7 @@ export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
     return getAuthUser;
   });
 
-// Инициализация
+  // Инициализация
   const init = async () => {
     try {
       await waitForAuth();
@@ -58,13 +55,14 @@ export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
 
   const getRoomProfile = () => {
     websocketStore.getRoomProfile(connectionId.value || 0);
-  }
+  };
 
   const createNewRoom = () => {
     websocketStore.createNewRoom(connectionId.value || 0);
-  }
-
-
+  };
+  const createNewGroup = (newGroup: INewGroup) => {
+    websocketStore.createNewGroup(connectionId.value || 0, newGroup);
+  };
 
   return {
     connectionId,
@@ -79,5 +77,6 @@ export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
     getGroupContent,
     getRoomProfile,
     createNewRoom,
+    createNewGroup,
   };
 }

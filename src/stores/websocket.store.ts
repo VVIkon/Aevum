@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia';
 // import { ref, computed } from 'vue';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import { useAuth } from '@/module/auth/composable/useAuth';
-import type { IMessage } from '@/module/messendo/interfaces/imessage.interface';
-import type { IRoomProfile } from '@/module/messendo/interfaces/iuser.profile.interface';
+import type { IMessage, INewGroup, IRoomProfile } from '@/module/messendo/interfaces/messendo.interface';
 import { dataOptions } from '../constants/index';
 
 interface WebSocketConnection {
@@ -11,7 +12,7 @@ interface WebSocketConnection {
   roomProfile: IRoomProfile | null;
   profileStatus: number; // 0-не было загрузки, 1-нет профиля, 2-профиль загружен
   isConnected: boolean;
-  connectionStatus: 'Disconnected'|'Connecting'|'Connected'|'Error';
+  connectionStatus: 'Disconnected' | 'Connecting' | 'Connected' | 'Error';
   error: Event | null;
   messageInput: string;
 }
@@ -82,10 +83,10 @@ export const useWebSocketStore = defineStore('websocket', {
         }
       };
 
-      connection.socket.onmessage = (event) => {
+      connection.socket.onmessage = async (event) => {
         if (event.data) {
           const data = JSON.parse(event.data);
-          this.handleIncomingMessage(id, data);
+          await this.handleIncomingMessage(id, data);
         }
       };
 
@@ -101,16 +102,16 @@ export const useWebSocketStore = defineStore('websocket', {
       };
     },
 
-    notifiForGroup(id: number, groupId: number, senderId: number, flag: boolean){
+    notifiForGroup(id: number, groupId: number, senderId: number, flag: boolean) {
       const connection = this.connections[id];
       const groups = connection?.roomProfile?.groups || [];
       if (groups.length) {
-        const ind = groups.findIndex(el=> el.id === groupId)
-        groups[ind].notification = { hasMessage: flag, senderId: senderId};
+        const ind = groups.findIndex((el) => el.id === groupId);
+        groups[ind].notification = { hasMessage: flag, senderId: senderId };
       }
     },
 
-    handleIncomingMessage(id: number, data: any) {
+    async handleIncomingMessage(id: number, data: any) {
       // console.log(`>>> handleIncomingMessage id: `, id);
       // console.log(`>>> data: `, data.data)
       const connection = this.connections[id];
@@ -122,16 +123,18 @@ export const useWebSocketStore = defineStore('websocket', {
         case 'newMessage':
           const mesTmp = {
             event: data.event,
-            message: data.data.message,
+            message: DOMPurify.sanitize(await marked.parse(data.data.message)),
             senderId: data.data.senderId,
             senderName: data.data.senderName,
             contentGroupId: data.data.sendToGroup,
-            dateCreate: (new Date( data.data.dateCreate)).toLocaleString('ru-RU', dataOptions),
+            dateCreate: new Date(data.data.dateCreate).toLocaleString('ru-RU', dataOptions),
           };
           this.messages.push(mesTmp);
           this.notifiForGroup(id, data.data.sendToGroup, data.data.senderId, true);
           break;
         case 'roomProfile':
+          // console.log(`>>> roomProfile: `, data.data.message.users);
+
           connection.profileStatus = !data.data.message ? 1 : 2;
           if (data.data.message) {
             connection.profileStatus = 2;
@@ -144,12 +147,12 @@ export const useWebSocketStore = defineStore('websocket', {
             for (const mes of data.data?.message || []) {
               const mesTmp = {
                 event: data.event,
-                message: mes.message,
+                message: DOMPurify.sanitize(await marked.parse(mes.message)),
                 senderId: mes.userid,
                 senderName: mes.username,
                 contentGroupId: mes.groupid,
                 contentGroupName: mes.groupname,
-                dateCreate: (new Date( mes.datecreate)).toLocaleString('ru-RU', dataOptions),
+                dateCreate: new Date(mes.datecreate).toLocaleString('ru-RU', dataOptions),
               };
               this.messages.push(mesTmp);
             }
@@ -158,14 +161,19 @@ export const useWebSocketStore = defineStore('websocket', {
         case 'newRoom':
           this.messages = [];
           if (data.data?.message) {
-
+          }
+          break;
+        case 'newGroup':
+          this.messages = [];
+          if (data.data?.message) {
+            // this.getRoomProfile(id);
           }
           break;
         default:
           break;
       }
     },
-disconnect(id: number) {
+    disconnect(id: number) {
       const connection = this.connections[id];
       if (!connection || !connection.socket) return;
 
@@ -239,7 +247,7 @@ disconnect(id: number) {
         event: 'sendMessage',
         data: {
           token: token?.value || '',
-          message,
+          message: DOMPurify.sanitize(message),
           sendToGroup,
           groupName,
           senderId: getAuthUser.value.userId,
@@ -247,7 +255,7 @@ disconnect(id: number) {
         },
       };
       this.sendWhenReady(connection, msg);
-      this.notifiForGroup(id, sendToGroup, getAuthUser.value.userId,false);
+      this.notifiForGroup(id, sendToGroup, getAuthUser.value.userId, false);
       return true;
     },
     /**
@@ -283,14 +291,14 @@ disconnect(id: number) {
     getRoomProfile(id: number) {
       const connection = this.connections[id];
       if (connection?.socket) {
-          const { token } = useAuth();
-          const msg = {
-            event: 'getRoomProfile',
-            data: {
-              token: token?.value || '',
-              message: 'getRoomProfile',
-            },
-          };
+        const { token } = useAuth();
+        const msg = {
+          event: 'getRoomProfile',
+          data: {
+            token: token?.value || '',
+            message: 'getRoomProfile',
+          },
+        };
         this.sendWhenReady(connection, msg);
         return true;
       }
@@ -299,21 +307,36 @@ disconnect(id: number) {
     createNewRoom(id: number) {
       const connection = this.connections[id];
       if (connection?.socket) {
-          const { token } = useAuth();
-          const msg = {
-            event: 'createNewRoom',
-            data: {
-              token: token?.value || '',
-              message: 'createNewRoom',
-            },
-          };
+        const { token } = useAuth();
+        const msg = {
+          event: 'createNewRoom',
+          data: {
+            token: token?.value || '',
+            message: 'createNewRoom',
+          },
+        };
         this.sendWhenReady(connection, msg);
         return true;
       }
       return false;
     },
 
-
+    createNewGroup(id: number, newGroup: INewGroup) {
+      const connection = this.connections[id];
+      if (connection?.socket) {
+        const { token } = useAuth();
+        const msg = {
+          event: 'createNewGroup',
+          data: {
+            token: token?.value || '',
+            message: newGroup,
+          },
+        };
+        this.sendWhenReady(connection, msg);
+        return true;
+      }
+      return false;
+    },
   },
 
   getters: {

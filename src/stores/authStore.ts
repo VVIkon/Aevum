@@ -2,14 +2,9 @@ import { defineStore } from 'pinia';
 import axios from 'axios';
 import { AUTH_PATHS } from '@/constants';
 import Cookies from 'js-cookie';
+import type { IAuthUser } from '@/module/auth/interfaces/auth.interfaces';
 
-export interface IAuthUser {
-  userId: number;
-  email: string;
-  roles: string[];
-  active: number;
-  fio: string;
-}
+
 
 interface State {
   token?: string;

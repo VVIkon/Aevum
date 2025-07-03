@@ -1,9 +1,9 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
 // import HomeView from '../views/HomeView.vue'
-import LoginView from '../views/LoginView.vue'
-import { ROUTES_PATHS } from '@/constants'
-import { useAuth } from '@/module/auth/composable/useAuth'
-import MesSendo from '@/module/messendo/pages/MesSendo.vue'
+import LoginView from '../views/LoginView.vue';
+import { ROUTES_PATHS } from '@/constants';
+import { useAuth } from '@/module/auth/composable/useAuth';
+import MesSendo from '@/module/MesSendo.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,22 +33,22 @@ const router = createRouter({
     //   meta: { requiresAuth: false}
     // },
   ],
-})
+});
 
 router.beforeEach((to, from, next) => {
-  const { isTokenated } = useAuth()
-  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+  const { isTokenated } = useAuth();
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
 
   // console.log('>>> 00 isTokenated: ', isTokenated.value);
   // console.log('>>> requiresAuth: ', requiresAuth);
 
   if (requiresAuth && !isTokenated.value) {
-    next(ROUTES_PATHS.LOGIN)
+    next(ROUTES_PATHS.LOGIN);
     // } else if (!requiresAuth && isTokenated.value) {
     //   next(ROUTES_PATHS.HOME)
   } else {
-    next()
+    next();
   }
-})
+});
 
-export default router
+export default router;
