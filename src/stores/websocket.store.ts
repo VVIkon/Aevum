@@ -15,6 +15,7 @@ interface WebSocketConnection {
   connectionStatus: 'Disconnected' | 'Connecting' | 'Connected' | 'Error';
   error: Event | null;
   messageInput: string;
+  updateGroup: string;
 }
 
 interface State {
@@ -45,6 +46,7 @@ export const useWebSocketStore = defineStore('websocket', {
         connectionStatus: 'Disconnected',
         error: null,
         messageInput: '',
+        updateGroup: '',
       };
 
       this.connect(id, url);
@@ -134,7 +136,6 @@ export const useWebSocketStore = defineStore('websocket', {
           break;
         case 'roomProfile':
           // console.log(`>>> roomProfile: `, data.data.message.users);
-
           connection.profileStatus = !data.data.message ? 1 : 2;
           if (data.data.message) {
             connection.profileStatus = 2;
@@ -161,12 +162,13 @@ export const useWebSocketStore = defineStore('websocket', {
         case 'newRoom':
           this.messages = [];
           if (data.data?.message) {
+            this.getRoomProfile(id);
           }
           break;
         case 'newGroup':
           this.messages = [];
           if (data.data?.message) {
-            // this.getRoomProfile(id);
+            this.getRoomProfile(id);
           }
           break;
         default:

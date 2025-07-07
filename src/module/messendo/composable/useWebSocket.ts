@@ -13,7 +13,13 @@ export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
   const initializationError = ref<Error | null>(null);
 
   // Реактивные данные соединения
-  const connection = computed(() => (connectionId.value ? websocketStore.getConnection(connectionId.value || 0) : null));
+  const connection = computed(() => {
+    if (!connectionId.value) {
+      return null;
+    }
+    // websocketStore.getRoomProfile(connectionId.value || 0);
+    return websocketStore.getConnection(connectionId.value || 0);
+  });
 
   // Очистка при размонтировании
   onUnmounted(() => {

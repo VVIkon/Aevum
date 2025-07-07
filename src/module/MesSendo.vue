@@ -41,10 +41,6 @@ onMounted(async () => {
   }
 });
 
-// const createRoom = () => {
-//   createNewRoom();
-//   getRoomProfile();
-// };
 const createGroup = () => {
   groupDialog.value?.openForm();
 };
@@ -53,7 +49,6 @@ const handleNewGroupSubmit = (payload: INewGroup) => {
   payload.active = Number(payload.active);
   payload.readOnly = Number(payload.readOnly);
   createNewGroup(payload);
-  getRoomProfile();
 };
 
 const sendMsg = () => {
@@ -81,8 +76,7 @@ const scrollToBottom = () => {
 };
 
 watch(messages, () => scrollToBottom(), { deep: true });
-// watch(connection, () => console.log(`>>> connection users: `, connection?.value?.roomProfile?.users || ''), { deep: true });
-// watch(selectedGroupProfile, () => console.log(`>>> selectedGroupProfile: `, selectedGroupProfile.value), { deep: true });
+// watch(connection, () => console.log(`>>> connection groups: `, connection?.value || ''), { deep: true });
 
 </script>
 <template>
@@ -152,7 +146,7 @@ watch(messages, () => scrollToBottom(), { deep: true });
     </div>
     <msGroupDialog
       ref="groupDialog"
-      :roomId = "connection?.roomProfile?.id || 0"
+      :roomProfile="connection?.roomProfile || null"
       :groupProfile="selectedGroupProfile || null"
       :availableUsers="connection?.roomProfile?.users || []"
       :currentUser="getUser.value"
