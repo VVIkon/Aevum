@@ -9,7 +9,7 @@ import type { IAuthUser } from '@/module/auth/interfaces/auth.interfaces';
 interface State {
   token?: string;
   status: 'logout' | 'got_token' | 'got_user' | 'success' | 'access_denid';
-  role: 'guest' | 'user' | 'superUser' | 'admin';
+  role: 'guest' | 'user' | 'bot' | 'superUser' | 'admin';
   authUser: IAuthUser | null;
 }
 

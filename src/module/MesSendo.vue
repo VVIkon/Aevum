@@ -41,6 +41,13 @@ onMounted(async () => {
   }
 });
 
+window.addEventListener('keydown', ({key, ctrlKey}) => {
+  if(key === 'Enter' && ctrlKey) {
+    sendMsg();
+  }
+})
+
+
 const createGroup = () => {
   groupDialog.value?.openForm();
 };

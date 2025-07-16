@@ -10,6 +10,12 @@ const ruleFormRef = ref<FormInstance>()
 const { getAccessToken, isTokenated } = useAuth();
 const router = useRouter();
 
+window.addEventListener('keydown', ({key, ctrlKey}) => {
+  if(key === 'Enter' && ctrlKey) {
+    submitForm(ruleFormRef.value);
+  }
+})
+
 const validateName = (rule: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('Введите логин или email (> 4 букв)'))
