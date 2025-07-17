@@ -165,7 +165,7 @@ export const useWebSocketStore = defineStore('websocket', {
             this.getRoomProfile(id);
           }
           break;
-        case 'newGroup':
+        case 'modifiedGroupProfile':
           this.messages = [];
           if (data.data?.message) {
             this.getRoomProfile(id);
@@ -323,12 +323,12 @@ export const useWebSocketStore = defineStore('websocket', {
       return false;
     },
 
-    createNewGroup(id: number, newGroup: INewGroup) {
+    groupOperations(id: number, newGroup: INewGroup) {
       const connection = this.connections[id];
       if (connection?.socket) {
         const { token } = useAuth();
         const msg = {
-          event: 'createNewGroup',
+          event: 'setGroupOper',
           data: {
             token: token?.value || '',
             message: newGroup,

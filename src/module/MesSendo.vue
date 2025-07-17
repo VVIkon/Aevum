@@ -29,7 +29,7 @@ const {
   getRoomProfile,
   getGroupContent,
   // createNewRoom,
-  createNewGroup
+  groupOperations
 } = useWebSocket(ROUTES_PATHS.WEB_SOCKET, selectedGroupId.value);
 
 onMounted(async () => {
@@ -47,15 +47,14 @@ window.addEventListener('keydown', ({key, ctrlKey}) => {
   }
 })
 
-
-const createGroup = () => {
-  groupDialog.value?.openForm();
+const groupOperation = (mode: boolean = false) => {
+  groupDialog.value?.openForm(mode);
 };
 
-const handleNewGroupSubmit = (payload: INewGroup) => {
+const handleGroupOper = (payload: INewGroup) => {
   payload.active = Number(payload.active);
   payload.readOnly = Number(payload.readOnly);
-  createNewGroup(payload);
+  groupOperations(payload);
 };
 
 const sendMsg = () => {
@@ -113,8 +112,8 @@ watch(messages, () => scrollToBottom(), { deep: true });
           </div>
           <div class="panel-tool">
             <!-- <el-button class="add-group" type="primary" :icon="House" @click="createRoom" /> -->
-            <el-button class="add-group" type="primary" :icon="User" @click="createGroup" />
-            <el-button class="edit-group" type="primary" :icon="Edit" />
+            <el-button class="add-group" type="primary" :icon="User" @click="groupOperation(false)" />
+            <el-button class="edit-group" type="primary" :icon="Edit" @click="groupOperation(true)" />
           </div>
         </div>
       </div>
@@ -157,7 +156,7 @@ watch(messages, () => scrollToBottom(), { deep: true });
       :groupProfile="selectedGroupProfile || null"
       :availableUsers="connection?.roomProfile?.users || []"
       :currentUser="getUser.value"
-      @submit="handleNewGroupSubmit"
+      @submit="handleGroupOper"
     ></msGroupDialog>
   </div>
 </template>

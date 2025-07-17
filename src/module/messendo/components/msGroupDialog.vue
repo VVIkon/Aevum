@@ -22,6 +22,7 @@ interface IOptionParams {
 
 const props = defineProps<Props>();
 const visibleDialog = ref(false);
+const editMode = ref(false);
 const groupFormRef = ref<FormInstance>();
 const activeTab = ref('basic')
 
@@ -29,6 +30,7 @@ const emit = defineEmits<{(e: 'submit', payload: INewGroup): void}>();
 
 const groupParams = reactive<INewGroup>({
   roomId: 0,
+  groupId: null,
   nameGroup: '',
   typeGroup: 'private',
   userId: 0,
@@ -36,6 +38,7 @@ const groupParams = reactive<INewGroup>({
   moderators: [],
   active: '1',
   readOnly: '0',
+  editMode: false,
 });
 
 const optionParams = reactive<IOptionParams>({
@@ -43,11 +46,20 @@ const optionParams = reactive<IOptionParams>({
 })
 
 watchEffect(() => {
+  groupParams.editMode = editMode.value;
   groupParams.roomId = props.roomProfile?.id || 0;
-  groupParams.nameGroup = `${props.currentUser?.fio || ''} - Group`;
+  groupParams.groupId = editMode.value ? (props.groupProfile?.id || null) : null;
+
+  groupParams.nameGroup = editMode.value
+    ? (props.groupProfile?.nameGroup || `${props.currentUser?.fio || ''} - Group`)
+    : `${props.currentUser?.fio || ''} - Group`;
   groupParams.userId = props.currentUser?.userId || 0;
-  groupParams.moderators = [props.currentUser?.userId || 0];
-  groupParams.users = [props.currentUser?.userId || 0];
+  groupParams.moderators = editMode.value
+    ? (props.groupProfile?.moderators || [props.currentUser?.userId || 0])
+    : [props.currentUser?.userId || 0];
+  groupParams.users = editMode.value
+    ? (props.groupProfile?.users?.map(el => el.id) || [props.currentUser?.userId || 0])
+    : [props.currentUser?.userId || 0];
   optionParams.namesOfGroups = props.roomProfile?.groups?.map(el => el.nameGroup.trim()) || [];
 });
 
@@ -83,7 +95,7 @@ const validateNameGroup = (rule: any, value: string, callback: any) => {
   } else if (value.length < 3 || value.length > 63) {
     activeTab.value = 'basic';
     callback(new Error('Длинна имени должна быть от 3 до 63 символов'))
-  } else if (optionParams.namesOfGroups.includes(value.trim()) ) {
+  } else if (!editMode.value && optionParams.namesOfGroups.includes(value.trim()) ) {
       activeTab.value = 'basic';
       callback(new Error('Такое имя группы уже имеется. Придумайте другое'))
   } else {
@@ -101,21 +113,17 @@ const rules = reactive<FormRules<INewGroup>>({
 });
 
 
-const openForm = () => {
+const openForm = (mode: boolean = false) => {
   visibleDialog.value = true;
+  editMode.value = mode;
 };
 
 const handleClose = (done: any) => {
   done();
   visibleDialog.value = false;
 };
-const closeForm = async (formEl: FormInstance | undefined) => {
-  if (!formEl) return;
-  formEl.validate(async (valid) => {
-    if (valid) {
-      visibleDialog.value = false;
-    }
-  });
+const closeForm = async () => {
+  visibleDialog.value = false;
 };
 
 const submitForm = async (formEl: FormInstance | undefined) => {
@@ -208,7 +216,7 @@ defineExpose({ openForm, closeForm });
               v-model="groupParams.moderators"
               filterable
               :data="modeUsers"
-              :titles="['Доступные', 'Участники']"
+              :titles="['Доступные', 'Модераторы']"
               :right-default-checked="[props.currentUser?.userId]"
             />
           </el-form-item>
@@ -217,7 +225,7 @@ defineExpose({ openForm, closeForm });
       <el-form-item>
         <el-button
           type="primary"
-          @click.stop="closeForm(groupFormRef)"
+          @click.stop="closeForm()"
         >Выход</el-button>
         <el-button
           type="primary"

@@ -66,8 +66,8 @@ export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
   const createNewRoom = () => {
     websocketStore.createNewRoom(connectionId.value || 0);
   };
-  const createNewGroup = (newGroup: INewGroup) => {
-    websocketStore.createNewGroup(connectionId.value || 0, newGroup);
+  const groupOperations = (newGroup: INewGroup) => {
+    websocketStore.groupOperations(connectionId.value || 0, newGroup);
   };
 
   return {
@@ -83,6 +83,6 @@ export function useWebSocket(websocketUrl: string, initialGroupId?: number) {
     getGroupContent,
     getRoomProfile,
     createNewRoom,
-    createNewGroup,
+    groupOperations,
   };
 }

@@ -11,6 +11,7 @@ export interface IContent {
 
 export interface INewGroup {
   roomId: number;
+  groupId: number | null;
 	nameGroup: string;
 	typeGroup: 'public' | 'private' | 'hidden';
 	userId: number;
@@ -18,6 +19,7 @@ export interface INewGroup {
 	moderators: number[];
 	active: string|number;
 	readOnly: string|number;
+  editMode: boolean;
 }
 
 export interface IMessage {
@@ -52,13 +54,13 @@ export interface IUser {
 
 export interface IGroupProfile {
 	id: number;
-	nameGroup: string;
-	typeGroup: string;
-	userId: number;
-	users: IUser[] | null;
-	moderators: number[] | null;
-	active: number;
-	readOnly: number;
+  nameGroup: string;
+  typeGroup: string;
+  userId: number;
+  users: IUser[] | null;
+  moderators: number[] | null;
+  active: number;
+  readOnly: number;
 	dateCreate: Date;
   notification: { hasMessage: boolean, senderId: number} | null
 }

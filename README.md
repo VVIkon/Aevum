@@ -109,7 +109,7 @@ Messanger prototype
         "owner" - владелец кабинета, модератор
         "user" - пользователь с правами общения, скачивания, обновления, удаления сообщений
         "guest" - только просмотр`
-
+        "bot"	- botUser (llama3)
     - id: number; (Id участника общения)
     - login: string; (логин)
     - password: string; (пароль)
