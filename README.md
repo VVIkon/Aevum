@@ -50,15 +50,17 @@ Messanger prototype
       - [X] панель RoomProfile
         - [X] операции выбора и загрузки RoomProfile
         - [X] badge при пришедшем непрочитанном сообщении (notifiForGroup)
-        - [ ] Операции RoomProfile
-          - [ ] создание, изменени, удаление RoomProfile
+        - [X] Операции RoomProfile
+          - [X] создание RoomProfile
+        - [X] Операции GroupProfile
+          - [X] создание, изменени, удаление GroupProfile
       - [ ] панель сообщений
         - [X] операции загрузки сообщений
         - [X] прокрутка вниз до последнего сообщение в MessagePanel
         - [X] операции перезаписи (добавления) новых сообщений
         - [X] сообщения для группы (через broadcust)
-      - [X] Ollama botUser - LLM llama3
       - [ ] личные закладки ???
+    - [X] Ollama botUser - LLM llama3
     - [ ] MesSaver
       - [ ] капсулы и экспорт
     - [ ] MesFind
